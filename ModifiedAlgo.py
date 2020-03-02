@@ -7,6 +7,7 @@ from Professor import Professor
 POPULATION_SIZE = 100
 GENES = []
 ROOMS = []
+SAMEPROFESSORS = []
 LABS = []
 arrayofTime = ["Mon-08:30-11:30", "Mon-11:45-02:45", "Mon-3:00-06:00", "Tue-08:30-11:30", "Tue-11:45-02:45",
                "Tue-3:00-06:00", "Wed-08:30-11:30", "Wed-11:45-02:45", "Wed-3:00-06:00", "Thurs-08:30-11:30",
@@ -39,6 +40,7 @@ class Individual(object):
         '''
         global arrayofTime
         global ROOMS
+        global SAMEPROFESSORS
         global LABS
         # gene = random.choice(arrayofTime) ,"Available_TimeSlots":[]
 
@@ -61,12 +63,18 @@ class Individual(object):
             newgene["roomAlotted"] = random.choice(ROOMS)
 
         newgene["Assigned-timeSlot"] = newtime
+        txt = newgene["Professor"].name+"-"+newtime[0:3]
+        if txt in SAMEPROFESSORS:
+            newgene["Professor"].sameDayCount = 1
+        else:
+            SAMEPROFESSORS.append(txt)
         # newGENE = Gene
         # print('Gene->>>>>>', newgene)
 
         return newgene
 
     def calcFitness(self):
+        clashMsg = ""
         fitness = 0
         ifFound = False
         for i in range(0, len(self.chromosome), +1):
@@ -76,27 +84,33 @@ class Individual(object):
                         if self.chromosome[i]["Assigned-timeSlot"] == self.chromosome[ch]["Assigned-timeSlot"] and \
                             self.chromosome[ch]["roomAlotted"].room == self.chromosome[i]["roomAlotted"].room:
                             # print('CLASH WITH OTHER TEACHER')
-                            self.chromosome[i]["isClash"] = "CLASH WITH OTHER TEACHER"
+                            clashMsg = "CLASH WITH OTHER TEACHER"
                             ifFound = True
                             fitness += 1
+                        if self.chromosome[i]["Professor"].name == self.chromosome[ch]["Professor"].name:
+                            if self.chromosome[i]["Assigned-timeSlot"][0:3] == self.chromosome[ch]["Assigned-timeSlot"][0:3]:
+                                fitness+=1
+                                clashMsg = "SameTime"
+
 
             else:
                 # self.chromosome[i]["isClash"] = True
                 # print('NOT IN AVAILABLE TIMESLOT')
                 fitness += 1
             if self.chromosome[i]["roomAlotted"].capacity < self.chromosome[i]["Capacity"]:
-                self.chromosome[i]["isClash"] = "CAPACITY ISSUE"
+                clashMsg = "CAPACITY ISSUE"
                 ifFound = True
                 fitness += 1
 
             if self.chromosome[i]["isLab"] == False:
                 if self.chromosome[i]["roomAlotted"].isLab == True:
-                    self.chromosome[i]["isClash"] = "LAB Issue"
+                    clashMsg = "LAB Issue"
                     ifFound = True
                     fitness += 1
 
         if ifFound == False:
             self.chromosome[i]["isClash"] = ""
+        self.chromosome[i]["isClash"] = clashMsg
         return fitness
 
     def crossover(self, p2):
@@ -134,6 +148,8 @@ class Individual(object):
                 if nextGene != gene:
                     # print(mutatedChromosome[gene]["Assigned-timeSlot"])
                     # print(mutatedChromosome[nextGene]["Assigned-timeSlot"])
+                    # if self.chromosome[gene]["Professor"].name == self.chromosome[nextGene]["Professor"].name:
+                    #         if self.chromosome[gene]["Assigned-timeSlot"][0:3] == self.chromosome[nextGene]["Assigned-timeSlot"][0:3]:
 
                     if mutatedChromosome[gene]["Assigned-timeSlot"] == mutatedChromosome[nextGene]["Assigned-timeSlot"]:
 
@@ -202,41 +218,75 @@ def main():
             LABS.append(r)
         else:
             ROOMS.append(r)
+    Prof1 = Professor("Shoaib", [arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4],
+                                arrayofTime[5], arrayofTime[6]],"",0)
+    Prof2 = Professor("adnan",[arrayofTime[0], arrayofTime[1], arrayofTime[12], arrayofTime[13]],"",0)
+    Prof3 = Professor("mirza",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0)
+    Prof4 = Professor("Ali",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0)
+    Prof5 = Professor("faiq",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0)
+    Prof6 = Professor("Jamal",arrayofTime,"",0)
+    Prof7 = Professor("Noman",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0)
+    Prof8 = Professor("Adeel",arrayofTime,"",0)
+    Prof9 = Professor("shahzain", [arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4],
+                                arrayofTime[5], arrayofTime[6]],"",0)
+    Prof10 = Professor("saim",[arrayofTime[0], arrayofTime[1], arrayofTime[12], arrayofTime[13]],"",0)
+    Prof11 = Professor("areeb",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0)
+    Prof12 = Professor("billal",[arrayofTime[1], arrayofTime[2]],"",0)
+    Prof13 = Professor("irfan",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0)
+    Prof14 = Professor("ismael",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0)
+    Prof15 = Professor("aarif",arrayofTime,"",0)
+    Prof16 = Professor("faris",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0)
 
-    course1 = {"Name": "MAD","Professor": Professor("Shoaib", [arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4],
-                                arrayofTime[5], arrayofTime[6]],"",0),
+    course1 = {"Name": "MAD","Professor": Prof1,
                "Capacity": 55, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
                "roomAlotted": None, "isLab": True}
-    course2 = {"Name": "Probability", "Professor":Professor("Shoaib",[arrayofTime[0], arrayofTime[1], arrayofTime[12], arrayofTime[13]],"",0),"Capacity": 50,
+    course2 = {"Name": "Probability", "Professor": Prof2,"Capacity": 50,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
-    course3 = {"Name": "AI LAB", "Professor": Professor("Shoaib",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0),
+    course3 = {"Name": "AI LAB", "Professor":Prof3,
                "Capacity": 30,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": True}
-    course4 = {"Name": "Multi", "Professor": Professor("Ahmed",[arrayofTime[1], arrayofTime[2]],"",0), "Capacity": 50,
+    course4 = {"Name": "Multi", "Professor": Prof2, "Capacity": 50,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
-    course5 = {"Name": "POM", "Professor": Professor("Ali",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0),
+    course5 = {"Name": "POM", "Professor": Prof4,
                "Capacity": 50,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
-    course6 = {"Name": "AI", "Professor": Professor("Ahmed",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0),
+    course6 = {"Name": "AI", "Professor": Prof5,
                "Capacity": 30, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
                "roomAlotted": None, "isLab": True}
-    course7 = {"Name": "CAO", "Professor": Professor("Jamal",arrayofTime,"",0), "Capacity": 60,
+    course7 = {"Name": "CAO", "Professor": Prof6, "Capacity": 60,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
-    course8 = {"Name": "DCL", "Professor": Professor("Noman",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0),"Capacity": 50,
+    course8 = {"Name": "DCL", "Professor": Prof7,"Capacity": 50,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
-    course9 = {"Name": "FYP", "Professor": Professor("Adeel",arrayofTime,"",0), "Capacity": 60,
+    course9 = {"Name": "FYP", "Professor": Prof8, "Capacity": 60,
                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
-    course10 = {"Name": "Calculus", "Professor": Professor("Aqeel",arrayofTime,"",0), "Capacity": 60,
+    course10 = {"Name": "Calculus", "Professor": Prof8, "Capacity": 60,
                 "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None,
                 "isLab": False}
-    course11 = {"Name": "MAD", "Professor": Professor("Adil",[arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4],arrayofTime[5], arrayofTime[6]],"",0),
+    course11 = {"Name": "MAD","Professor": Prof9,
                "Capacity": 55, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
                "roomAlotted": None, "isLab": True}
-    course12 = {"Name": "Calculus", "Professor": Professor("Akbar",arrayofTime,"",0), "Capacity": 60,
-                "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None,
-                "isLab": False}
-    courses = [course1, course2, course3, course4, course5, course6, course7, course8, course9, course10, course11,
-               course12]
+    course12 = {"Name": "Probability", "Professor": Prof10,"Capacity": 50,
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+    course13 = {"Name": "AI LAB", "Professor": Prof11,
+               "Capacity": 30,
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": True}
+    course14 = {"Name": "Multi", "Professor": Prof12, "Capacity": 50,
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+    course15 = {"Name": "POM", "Professor": Prof13,
+               "Capacity": 50,
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+    course16 = {"Name": "AI", "Professor": Prof14,
+               "Capacity": 30, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
+               "roomAlotted": None, "isLab": True}
+    course17 = {"Name": "CAO", "Professor": Prof15, "Capacity": 60,
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+    course18 = {"Name": "DCL", "Professor": Prof16,"Capacity": 50,
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+    
+ 
+            
+    
+    courses = [course1, course2, course3, course4, course5, course6, course7, course8, course9,course10,course11, course12, course13, course14, course15, course16, course17, course18]
     GENES = courses
 
     for _ in range(POPULATION_SIZE):
@@ -261,7 +311,7 @@ def main():
             break
         elif population[0].fitness == prevFitness:
             fitness_Same_Count += 1
-            if fitness_Same_Count > 14:
+            if fitness_Same_Count > 40:
                 ifFound = True
                 break
 
@@ -296,7 +346,7 @@ def main():
     print('SELECTED GENERATION ')
     for ch in population[0].chromosome:
         print('Name : ', ch["Name"])
-        print('CLASh : ', ch["isClash"])
+        print('Professor : ', ch["Professor"].name)
         print('TimeSlot : ', ch["Assigned-timeSlot"])
         print('Room : ', ch["roomAlotted"].room)
         print('\n')

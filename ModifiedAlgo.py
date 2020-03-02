@@ -75,6 +75,7 @@ class Individual(object):
 
     def calcFitness(self):
         clashMsg = ""
+        alreadyCounted = []
         fitness = 0
         ifFound = False
         for i in range(0, len(self.chromosome), +1):
@@ -87,11 +88,11 @@ class Individual(object):
                             clashMsg = "CLASH WITH OTHER TEACHER"
                             ifFound = True
                             fitness += 1
-                        if self.chromosome[i]["Professor"].name == self.chromosome[ch]["Professor"].name:
-                            if self.chromosome[i]["Assigned-timeSlot"][0:3] == self.chromosome[ch]["Assigned-timeSlot"][0:3]:
+                        if self.chromosome[i]["Professor"].sameDayCount > 2:
+                            if self.chromosome[i]["Professor"].name not in alreadyCounted:
                                 fitness+=1
-                                clashMsg = "SameTime"
-
+                            else:
+                                alreadyCounted.append(self.chromosome[i]["Professor"].name)
 
             else:
                 # self.chromosome[i]["isClash"] = True
@@ -146,33 +147,19 @@ class Individual(object):
             for nextGene in range(0, len(mutatedChromosome), +1):
 
                 if nextGene != gene:
-                    # print(mutatedChromosome[gene]["Assigned-timeSlot"])
-                    # print(mutatedChromosome[nextGene]["Assigned-timeSlot"])
-                    # if self.chromosome[gene]["Professor"].name == self.chromosome[nextGene]["Professor"].name:
-                    #         if self.chromosome[gene]["Assigned-timeSlot"][0:3] == self.chromosome[nextGene]["Assigned-timeSlot"][0:3]:
-
                     if mutatedChromosome[gene]["Assigned-timeSlot"] == mutatedChromosome[nextGene]["Assigned-timeSlot"]:
 
                         if mutatedChromosome[gene]["roomAlotted"].room == mutatedChromosome[nextGene][
                             "roomAlotted"].room:
                             if len(mutatedChromosome[gene]["Available_TimeSlots"]) > 1:
-                                for i in mutatedChromosome[gene]["Available_TimeSlots"]:
-                                    if i != mutatedChromosome[gene]["Assigned-timeSlot"]:
-                                        mutatedChromosome[gene]["Assigned-timeSlot"] = i
-                                        break
-                                # mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(
-                                #     mutatedChromosome[gene]["Available_TimeSlots"])
+                                mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
+                                continue
                             elif len(mutatedChromosome[nextGene]["Available_TimeSlots"]) > 1:
-                                for i in mutatedChromosome[nextGene]["Available_TimeSlots"]:
-                                    if i != mutatedChromosome[nextGene]["Assigned-timeSlot"]:
-                                        mutatedChromosome[nextGene]["Assigned-timeSlot"] = i
-                                        break
-                                # mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(
-                                #     mutatedChromosome[nextGene]["Available_TimeSlots"])
+                                mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[nextGene]["Available_TimeSlots"])
+                                continue
+            # if mutatedChromosome[gene]["Professor"].sameDayCount>2:
+                
 
-                        # if self.chromosome[i]["isLab"] == False:
-                        #     if self.chromosome[i]["roomAlotted"].isLab == True:
-                        #         fitness += 1
             if mutatedChromosome[gene]["isLab"] == False:
                 if mutatedChromosome[gene]["roomAlotted"].isLab == True:
                     mutatedChromosome[gene]["roomAlotted"] = random.choice(ROOMS)

@@ -105,13 +105,6 @@ class Individual(object):
                         if self.chromosome[i]["Assigned-timeSlot"] == self.chromosome[ch]["Assigned-timeSlot"]:        
                             fitness += 1
                             countedIndex.append(ch)
-                        if self.chromosome[i]["Assigned-timeSlot"][0:3] == self.chromosome[ch]["Assigned-timeSlot"][0:3]:
-                            fitness += 1
-
-
-            # if self.chromosome[i]["Professor"].name not in alreadyCounted:
-            #     if len(self.chromosome[i]["Professor"].courses) > 2:
-            #         fitness += 1
             
             if self.chromosome[i]["roomAlotted"].capacity < self.chromosome[i]["Capacity"]:
                 clashMsg = "CAPACITY ISSUE"
@@ -123,6 +116,20 @@ class Individual(object):
                     clashMsg = "LAB Issue"
                     ifFound = True
                     fitness += 1
+        
+        for gene in range(0, len(self.chromosome), +1):
+            localCount = 1
+            for nextGene in range(0, len(self.chromosome), +1):
+                if gene != nextGene and nextGene not in alreadyCounted:
+                    if self.chromosome[gene]["Professor"].name == self.chromosome[nextGene]["Professor"].name:
+                        if self.chromosome[gene]["Assigned-timeSlot"] == self.chromosome[nextGene]["Assigned-timeSlot"]:
+                            self.chromosome[nextGene]["Assigned-timeSlot"] = random.choice(self.chromosome[nextGene]["Available_TimeSlots"])
+                        if self.chromosome[gene]["Assigned-timeSlot"][0:3] == self.chromosome[nextGene]["Assigned-timeSlot"][0:3]:
+                            localCount += 1
+                            if localCount > 2:
+                                fitness += 1
+                            alreadyCounted.append(gene)
+                            alreadyCounted.append(nextGene)
 
         return fitness
 
@@ -154,35 +161,10 @@ class Individual(object):
 
     def mutation(self, chromosome):
         mutatedChromosome = chromosome
-        alreadyCounted = []
-        countedIndex = []
+
         global ROOMS
         for gene in range(0, len(mutatedChromosome), +1):
-            countedIndex.append(gene)
-            for nextGene in range(0, len(mutatedChromosome), +1):
-                
-                if nextGene != nextGene:
-                    if mutatedChromosome[gene]["Assigned-timeSlot"] == mutatedChromosome[nextGene]["Assigned-timeSlot"]:
-                    
-                        if mutatedChromosome[gene]["roomAlotted"].room == mutatedChromosome[nextGene][
-                            "roomAlotted"].room:
-                            if len(mutatedChromosome[gene]["Available_TimeSlots"]) > 1:
-                                mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
-                                countedIndex.append(nextGene)
-                                
-                            elif len(mutatedChromosome[nextGene]["Available_TimeSlots"]) > 1:
-                                mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[nextGene]["Available_TimeSlots"])
-                                countedIndex.append(nextGene)
-                                
-            # if mutatedChromosome[gene]["Professor"].sameDayCount>2:
-
-                
-               
-            # if mutatedChromosome[gene]["Professor"].name not in alreadyCounted:
-            #     alreadyCounted.append(mutatedChromosome[gene]["Professor"].name)
-            # else:
-            #     mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
-
+            mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
             if mutatedChromosome[gene]["isLab"] == False:
                 if mutatedChromosome[gene]["roomAlotted"].isLab == True:
                     mutatedChromosome[gene]["roomAlotted"] = random.choice(ROOMS)
@@ -197,19 +179,7 @@ class Individual(object):
                     mutatedChromosome[gene]["roomAlotted"] = random.choice(ROOMS)
         
         
-        for gene in range(0, len(mutatedChromosome), +1):
-            localCount = 0
-            for nextGene in range(0, len(mutatedChromosome), +1):
-                if gene != nextGene and nextGene not in alreadyCounted:
-                    if mutatedChromosome[gene]["Professor"].name == mutatedChromosome[nextGene]["Professor"].name:
-                        if mutatedChromosome[gene]["Assigned-timeSlot"] == mutatedChromosome[nextGene]["Assigned-timeSlot"]:
-                            mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[nextGene]["Available_TimeSlots"])
-                        if mutatedChromosome[gene]["Assigned-timeSlot"][0:3] == mutatedChromosome[nextGene]["Assigned-timeSlot"][0:3]:
-                            localCount += 1
-                            if localCount > 2:
-                                mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[nextGene]["Available_TimeSlots"])
-                            alreadyCounted.append(gene)
-                            alreadyCounted.append(nextGene)
+       
                         
         return mutatedChromosome
 
@@ -309,8 +279,8 @@ def main():
     
  
             
-    courses = [course4, course2, course5]
-    # courses = [course1, course2, course3, course4, course5, course6, course7, course8, course9,course10,course11, course12, course13, course14, course15, course16, course17, course18]
+    # courses = [course4, course2, course5]
+    courses = [course1, course2, course3, course4, course5, course6, course7, course8, course9,course10,course11, course12, course13, course14, course15, course16, course17, course18]
     GENES = courses
 
     for _ in range(POPULATION_SIZE):
@@ -372,6 +342,7 @@ def main():
         print('Name : ', ch["Name"])
         print('Professor : ', ch["Professor"].name)
         print('TimeSlot : ', ch["Assigned-timeSlot"])
+        # print('Available : ', ch["Available_TimeSlots"])
         print('Room : ', ch["roomAlotted"].room)
         print('\n')
     # print('SELECTED CHROMOSOME LENGTH  ', len(population[0].chromosome))

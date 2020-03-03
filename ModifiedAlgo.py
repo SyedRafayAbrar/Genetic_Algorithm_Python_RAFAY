@@ -63,11 +63,12 @@ class Individual(object):
             newgene["roomAlotted"] = random.choice(ROOMS)
 
         newgene["Assigned-timeSlot"] = newtime
-        txt = newgene["Professor"].name+"-"+newtime[0:3]
-        if txt in SAMEPROFESSORS:
-            newgene["Professor"].sameDayCount = 1
-        else:
-            SAMEPROFESSORS.append(txt)
+        newgene["Professor"].courses.append(newgene["Name"])
+        # txt = newgene["Professor"].name+"-"+newtime[0:3]
+        # if txt in SAMEPROFESSORS:
+        #     newgene["Professor"].sameDayCount = 1
+        # else:
+        #     SAMEPROFESSORS.append(txt)
         # newGENE = Gene
         # print('Gene->>>>>>', newgene)
 
@@ -76,28 +77,39 @@ class Individual(object):
     def calcFitness(self):
         clashMsg = ""
         alreadyCounted = []
+        countedIndex = []
         fitness = 0
         ifFound = False
+        
         for i in range(0, len(self.chromosome), +1):
+            
+            if i in countedIndex:
+                continue
+            countedIndex.append(i)
             if self.chromosome[i]["Assigned-timeSlot"] in self.chromosome[i]["Professor"].availability:
                 for ch in range(0, len(self.chromosome), +1):
-                    if ch != i:
-                        if self.chromosome[i]["Assigned-timeSlot"] == self.chromosome[ch]["Assigned-timeSlot"] and \
-                            self.chromosome[ch]["roomAlotted"].room == self.chromosome[i]["roomAlotted"].room:
-                            # print('CLASH WITH OTHER TEACHER')
-                            clashMsg = "CLASH WITH OTHER TEACHER"
+                    if ch not in countedIndex:
+                        
+                        if self.chromosome[i]["Assigned-timeSlot"] == self.chromosome[ch]["Assigned-timeSlot"] and self.chromosome[ch]["roomAlotted"].room == self.chromosome[i]["roomAlotted"].room:
+                            
                             ifFound = True
                             fitness += 1
-                        if self.chromosome[i]["Professor"].sameDayCount > 2:
-                            if self.chromosome[i]["Professor"].name not in alreadyCounted:
-                                fitness+=1
-                            else:
-                                alreadyCounted.append(self.chromosome[i]["Professor"].name)
+                            countedIndex.append(ch)
 
-            else:
-                # self.chromosome[i]["isClash"] = True
-                # print('NOT IN AVAILABLE TIMESLOT')
-                fitness += 1
+                        if self.chromosome[i]["Professor"].name == self.chromosome[ch]["Professor"].name:
+                            if self.chromosome[i]["Assigned-timeSlot"] == self.chromosome[ch]["Assigned-timeSlot"]:
+                                
+                                fitness += 1
+                                countedIndex.append(ch)
+                    else:
+                        continue
+            # else:
+               
+            
+            if self.chromosome[i]["Professor"].name not in alreadyCounted:
+                if len(self.chromosome[i]["Professor"].courses) > 2:
+                    fitness += 1
+            
             if self.chromosome[i]["roomAlotted"].capacity < self.chromosome[i]["Capacity"]:
                 clashMsg = "CAPACITY ISSUE"
                 ifFound = True
@@ -109,9 +121,6 @@ class Individual(object):
                     ifFound = True
                     fitness += 1
 
-        if ifFound == False:
-            self.chromosome[i]["isClash"] = ""
-        self.chromosome[i]["isClash"] = clashMsg
         return fitness
 
     def crossover(self, p2):
@@ -142,23 +151,37 @@ class Individual(object):
 
     def mutation(self, chromosome):
         mutatedChromosome = chromosome
+        alreadyCounted = []
+        countedIndex = []
         global ROOMS
         for gene in range(0, len(mutatedChromosome), +1):
+            countedIndex.append(gene)
             for nextGene in range(0, len(mutatedChromosome), +1):
-
-                if nextGene != gene:
+                
+                if nextGene not in countedIndex:
                     if mutatedChromosome[gene]["Assigned-timeSlot"] == mutatedChromosome[nextGene]["Assigned-timeSlot"]:
 
                         if mutatedChromosome[gene]["roomAlotted"].room == mutatedChromosome[nextGene][
                             "roomAlotted"].room:
                             if len(mutatedChromosome[gene]["Available_TimeSlots"]) > 1:
                                 mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
-                                continue
+                                countedIndex.append(nextGene)
+                                
                             elif len(mutatedChromosome[nextGene]["Available_TimeSlots"]) > 1:
                                 mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[nextGene]["Available_TimeSlots"])
-                                continue
+                                countedIndex.append(nextGene)
+                                
             # if mutatedChromosome[gene]["Professor"].sameDayCount>2:
-                
+
+                if mutatedChromosome[gene]["Assigned-timeSlot"] == mutatedChromosome[nextGene]["Assigned-timeSlot"]:
+                    if mutatedChromosome[gene]["Professor"].name == mutatedChromosome[nextGene]["Professor"].name:
+                        mutatedChromosome[nextGene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[nextGene]["Available_TimeSlots"])
+                        countedIndex.append(nextGene)
+               
+            if mutatedChromosome[gene]["Professor"].name not in alreadyCounted:
+                alreadyCounted.append(mutatedChromosome[gene]["Professor"].name)
+            else:
+                mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
 
             if mutatedChromosome[gene]["isLab"] == False:
                 if mutatedChromosome[gene]["roomAlotted"].isLab == True:
@@ -189,13 +212,13 @@ def main():
     # current generation
     generation = 1
     rooms = [
-        Room("CS-101", 40, False),
-        Room("CS-102", 60, False),
+        Room("CS-101", 70, False),
+        Room("CS-102", 70, False),
         Room("CS-103", 70, False),
         Room("Lab-1", 70, True),
-        Room("CS-104", 40, False),
+        Room("CS-104", 70, False),
         Room("CS-105", 70, False),
-        Room("Lab-2", 40, True),
+        Room("Lab-2", 70, True),
         Room("CS-106", 70, False)
         
     ]
@@ -205,24 +228,23 @@ def main():
             LABS.append(r)
         else:
             ROOMS.append(r)
-    Prof1 = Professor("Shoaib", [arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4],
-                                arrayofTime[5], arrayofTime[6]],"",0)
-    Prof2 = Professor("adnan",[arrayofTime[0], arrayofTime[1], arrayofTime[12], arrayofTime[13]],"",0)
-    Prof3 = Professor("mirza",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0)
-    Prof4 = Professor("Ali",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0)
-    Prof5 = Professor("faiq",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0)
-    Prof6 = Professor("Jamal",arrayofTime,"",0)
-    Prof7 = Professor("Noman",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0)
-    Prof8 = Professor("Adeel",arrayofTime,"",0)
+    Prof1 = Professor("Shoaib", arrayofTime,"",0,[])
+    Prof2 = Professor("adnan",arrayofTime,"",0,[])
+    Prof3 = Professor("mirza",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0,[])
+    Prof4 = Professor("Ali",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0,[])
+    Prof5 = Professor("faiq",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0,[])
+    Prof6 = Professor("Jamal",arrayofTime,"",0,[])
+    Prof7 = Professor("Noman",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0,[])
+    Prof8 = Professor("Adeel",arrayofTime,"",0,[])
     Prof9 = Professor("shahzain", [arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4],
-                                arrayofTime[5], arrayofTime[6]],"",0)
-    Prof10 = Professor("saim",[arrayofTime[0], arrayofTime[1], arrayofTime[12], arrayofTime[13]],"",0)
-    Prof11 = Professor("areeb",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0)
-    Prof12 = Professor("billal",[arrayofTime[1], arrayofTime[2]],"",0)
-    Prof13 = Professor("irfan",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0)
-    Prof14 = Professor("ismael",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0)
-    Prof15 = Professor("aarif",arrayofTime,"",0)
-    Prof16 = Professor("faris",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0)
+                                arrayofTime[5], arrayofTime[6]],"",0,[])
+    Prof10 = Professor("saim",[arrayofTime[0], arrayofTime[1], arrayofTime[2], arrayofTime[13]],"",0,[])
+    Prof11 = Professor("areeb",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0,[])
+    Prof12 = Professor("billal",[arrayofTime[1], arrayofTime[2]],"",0,[])
+    Prof13 = Professor("irfan",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0,[])
+    Prof14 = Professor("ismael",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0,[])
+    Prof15 = Professor("aarif",arrayofTime,"",0,[])
+    Prof16 = Professor("faris",[arrayofTime[1], arrayofTime[2], arrayofTime[3], arrayofTime[4], arrayofTime[14]],"",0,[])
 
     course1 = {"Name": "MAD","Professor": Prof1,
                "Capacity": 55, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",

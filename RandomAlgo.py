@@ -197,14 +197,14 @@ def main():
     # current generation
     generation = 1
     rooms = [
-        Room("CS-101", 70, False),
-        Room("CS-102", 70, False),
-        Room("CS-103", 70, False),
-        Room("Lab-1", 70, True),
-        Room("CS-104", 70, False),
-        Room("CS-105", 70, False),
-        Room("Lab-2", 70, True),
-        Room("CS-106", 70, False)
+        Room("CS-101", 70, False,False),
+        Room("CS-102", 70, False,False),
+        Room("CS-103", 70, False,False),
+        Room("Lab-1", 70, True,False),
+        Room("CS-104", 70, False,False),
+        Room("CS-105", 70, False,False),
+        Room("Lab-2", 70, True,False),
+        Room("CS-106", 70, False,False)
         
     ]
     

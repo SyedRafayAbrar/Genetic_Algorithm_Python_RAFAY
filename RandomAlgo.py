@@ -1,6 +1,6 @@
 
 import random
-from random import randint
+from random import randint,randrange
 from com.Classes.Room import Room
 from Professor import Professor
 
@@ -9,6 +9,7 @@ GENES = []
 ROOMS = []
 SAMEPROFESSORS = []
 LABS = []
+PhysicsLAB = []
 arrayofTime = ["Mon-08:30-11:30", "Mon-11:45-02:45", "Mon-3:00-06:00", "Tue-08:30-11:30", "Tue-11:45-02:45",
                "Tue-3:00-06:00", "Wed-08:30-11:30", "Wed-11:45-02:45", "Wed-3:00-06:00", "Thurs-08:30-11:30",
                "Thurs-11:45-02:45", "Thurs-3:00-06:00", "Sat-08:30-11:30", "Sat-11:45-02:45", "Sat-3:00-06:00",
@@ -38,10 +39,7 @@ class Individual(object):
         '''
         create random genes for mutation
         '''
-        global arrayofTime
-        global ROOMS
-        global SAMEPROFESSORS
-        global LABS
+        global ROOMS, PhysicsLAB,SAMEPROFESSORS,LABS,arrayofTime
         # gene = random.choice(arrayofTime) ,"Available_TimeSlots":[]
 
         newgene = Gene
@@ -59,6 +57,8 @@ class Individual(object):
         # print('newtime', newtime)
         if newgene["isLab"] == True:
             newgene["roomAlotted"] = random.choice(LABS)
+        elif newgene["isPhysics_Lab"]:
+            newgene["roomAlotted"] = random.choice(PhysicsLAB)
         else:
             newgene["roomAlotted"] = random.choice(ROOMS)
 
@@ -113,10 +113,15 @@ class Individual(object):
 
             if self.chromosome[i]["isLab"] == False:
                 if self.chromosome[i]["roomAlotted"].isLab == True:
-                    clashMsg = "LAB Issue"
-                    ifFound = True
+                    
+                    fitness += 1
+
+            if self.chromosome[i]["isPhysics_Lab"] == False:
+                if self.chromosome[i]["roomAlotted"].isPhysicsLab == True:
+                    
                     fitness += 1
         
+
         for gene in range(0, len(self.chromosome), +1):
             localCount = 1
             for nextGene in range(0, len(self.chromosome), +1):
@@ -162,16 +167,28 @@ class Individual(object):
     def mutation(self, chromosome):
         mutatedChromosome = chromosome
 
-        global ROOMS
+        global ROOMS,LABS,physicsLab
+        rand = randrange(0,len(mutatedChromosome)+1,1)
         for gene in range(0, len(mutatedChromosome), +1):
-            mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
+            if gene == rand:
+                mutatedChromosome[gene]["Assigned-timeSlot"] = random.choice(mutatedChromosome[gene]["Available_TimeSlots"])
+                isFound = False
+                while isFound:
+                    rand = randrange(0,len(mutatedChromosome)+1,1)
+                    if rand != gene:
+                        isFound = True
+
+            
             if mutatedChromosome[gene]["isLab"] == False:
                 if mutatedChromosome[gene]["roomAlotted"].isLab == True:
                     mutatedChromosome[gene]["roomAlotted"] = random.choice(ROOMS)
 
+            if mutatedChromosome[gene]["isPhysics_Lab"] == True:
+                if mutatedChromosome[gene]["roomAlotted"].isPhysicsLab == False:
+                    mutatedChromosome[gene]["roomAlotted"] = random.choice(PhysicsLAB)
             if mutatedChromosome[gene]["isLab"] == True:
                 if mutatedChromosome[gene]["roomAlotted"].isLab == False:
-                    mutatedChromosome[gene]["roomAlotted"] = random.choice(LABS)
+                    mutatedChromosome[gene]["roomAlotted"] = random.choice(LABS)        
             if mutatedChromosome[gene]["roomAlotted"].capacity < mutatedChromosome[gene]["Capacity"]:
                 if mutatedChromosome[gene]["isLab"] == True:
                     mutatedChromosome[gene]["roomAlotted"] = random.choice(LABS)
@@ -190,7 +207,9 @@ def main():
     global GENES
     global LABS
     global ROOMS
+    global PhysicsLAB
     prevFitness = 10
+    iterations = 0
     fitness_Same_Count = 0
     ifFound = False
     population = []
@@ -203,7 +222,7 @@ def main():
         Room("Lab-1", 70, True,False),
         Room("CS-104", 70, False,False),
         Room("CS-105", 70, False,False),
-        Room("Lab-2", 70, True,False),
+        Room("Lab-2", 70, False,True),
         Room("CS-106", 70, False,False)
         
     ]
@@ -211,10 +230,13 @@ def main():
     for r in rooms:
         if r.isLab == True:
             LABS.append(r)
+        elif r.isPhysicsLab == True:
+            PhysicsLAB.append(r)
         else:
             ROOMS.append(r)
+
     Prof1 = Professor("Shoaib", arrayofTime,"",0,[])
-    Prof2 = Professor("adnan",[arrayofTime[6],arrayofTime[7],arrayofTime[8]],"",0,[])
+    Prof2 = Professor("adnan",[arrayofTime[6],arrayofTime[7],arrayofTime[8],arrayofTime[9]],"",0,[])
     Prof3 = Professor("mirza",[arrayofTime[3], arrayofTime[7], arrayofTime[9], arrayofTime[11], arrayofTime[7]],"",0,[])
     Prof4 = Professor("Ali",[arrayofTime[0], arrayofTime[1], arrayofTime[10], arrayofTime[11]],"",0,[])
     Prof5 = Professor("faiq",[arrayofTime[0], arrayofTime[1], arrayofTime[2]],"",0,[])
@@ -233,49 +255,49 @@ def main():
 
     course1 = {"Name": "MAD","Professor": Prof1,
                "Capacity": 55, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
-               "roomAlotted": None, "isLab": True}
+               "roomAlotted": None, "isLab": True,"isPhysics_Lab":False}
     course2 = {"Name": "Probability", "Professor": Prof2,"Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course3 = {"Name": "AI LAB", "Professor":Prof3,
                "Capacity": 30,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": True}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": True,"isPhysics_Lab":False}
     course4 = {"Name": "Multi", "Professor": Prof2, "Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course5 = {"Name": "POM", "Professor": Prof2,
                "Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course6 = {"Name": "AI", "Professor": Prof5,
                "Capacity": 30, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
-               "roomAlotted": None, "isLab": True}
+               "roomAlotted": None, "isLab": True,"isPhysics_Lab":False}
     course7 = {"Name": "CAO", "Professor": Prof6, "Capacity": 60,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course8 = {"Name": "DCL", "Professor": Prof7,"Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course9 = {"Name": "FYP", "Professor": Prof8, "Capacity": 60,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course10 = {"Name": "Calculus", "Professor": Prof8, "Capacity": 60,
                 "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None,
-                "isLab": False}
+                "isLab": False,"isPhysics_Lab":False}
     course11 = {"Name": "MAD","Professor": Prof9,
                "Capacity": 55, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
-               "roomAlotted": None, "isLab": True}
+               "roomAlotted": None, "isLab": True,"isPhysics_Lab":False}
     course12 = {"Name": "Probability", "Professor": Prof10,"Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course13 = {"Name": "AI LAB", "Professor": Prof11,
                "Capacity": 30,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": True}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": True,"isPhysics_Lab":False}
     course14 = {"Name": "Multi", "Professor": Prof12, "Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course15 = {"Name": "POM", "Professor": Prof13,
                "Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     course16 = {"Name": "AI", "Professor": Prof14,
                "Capacity": 30, "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "",
-               "roomAlotted": None, "isLab": True}
+               "roomAlotted": None, "isLab": True,"isPhysics_Lab":False}
     course17 = {"Name": "CAO", "Professor": Prof15, "Capacity": 60,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":True}
     course18 = {"Name": "DCL", "Professor": Prof16,"Capacity": 50,
-               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False}
+               "Assigned-timeSlot": "", "Available_TimeSlots": [], "isClash": "", "roomAlotted": None, "isLab": False,"isPhysics_Lab":False}
     
  
             
@@ -296,7 +318,7 @@ def main():
         population = sorted(population, key=lambda x: x.fitness)
         print('Fitness After-----', population[0].fitness)
 
-        prevFitness = population[0].fitness
+        
         if population[0].fitness <= 0:
             ifFound = True
             # print('SELECTED GENERATION')
@@ -308,6 +330,12 @@ def main():
             if fitness_Same_Count > 40:
                 ifFound = True
                 break
+        elif generation >= 100:
+                ifFound = True
+                break
+        else:
+            prevFitness = population[0].fitness
+            fitness_Same_Count = 0
 
         new_generation = []
         s = int((10 * POPULATION_SIZE) // 100)

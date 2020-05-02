@@ -303,6 +303,7 @@ def main():
             
     # courses = [course4, course2, course5]
     courses = [course1, course2, course3, course4, course5, course6, course7, course8, course9,course10,course11, course12, course13, course14, course15, course16, course17, course18]
+    # courses = [course1]
     GENES = courses
 
     for _ in range(POPULATION_SIZE):
